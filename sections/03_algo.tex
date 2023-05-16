@@ -43,18 +43,18 @@
 其中$T_i$表示当前帧激光雷达的位置, $\mathbf{p}_i$表示该点在体素中的相对坐标,$\mbox{TriLerp}(\cdot , \cdot)$表示三线性插值函数, $\mathbf{e}$表示存储在体素中的特征。$F_\theta\mbox{和}G_\phi$分别为带可优化网络参数的解码器。为了计算每一个采样点的权重$w_i$, 我们使用sigmoid函数$\mathbf{\sigma}$计算sdf值$s_i$与先前设置的截断距离$tr$的比值。我们使用该权重对这条光线上的每个采样点的语义向量$\mathbf{S}_i$进行加权积分得到最终结果$\mathbf{S}$。同样的,为了得到深度值,我们对这条光线上每一个采样点的深度进行积分,其中$d_i$为第$i$个采样点的深度。
 \subsection{建图}
 \subsubsection{地图优化}
-为了监督网络训练,我们尝试了多种损失函数分别为semantic loss, depth loss, free-space loss, SDF loss和二元交叉熵BCE loss。其中semantic loss和depth loss最为简单,直接计算值与真实值ground truth之间的差距求得。给定采样点云集合$P$:
+为了监督网络训练,我们尝试了多种损失函数分别为semantic loss, depth loss, free-space loss, SDF loss和二元交叉熵BCE loss。其中semantic loss为多元交叉熵函数,depth loss为L1损失函数。给定采样点云集合$P$:
 \begin{equation}
-    \mathcal{L}_{sem} = \frac{1}{|P|}\sum_{i=0}^{|P|}\| \mathbf{S}_i-\mathbf{S}_i^{gt}\Vert ,
+    \mathcal{L}_{sem} = -\frac{1}{|P|}\sum_{i=0}^{|P|}\sum_{j=0}^{N_{sum}}\mathbf{S}_i^{gt}[j]\log(\mathbf{S}_i[j]),
 \end{equation}
 \begin{equation}
     \mathcal{L}_{depth} = \frac{1}{|P|}\sum_{i=0}^{|P|}\| D_i-D_i^{gt}\Vert ,
 \end{equation}
-其中$\mathbf{S}_i$和$D_i$为点云帧集合中第$i$个点渲染出的语义向量和深度,与之对应的$\mathbf{S}_i^{gt}$同样为$N_{sem}$维向量,除语义标签索引位置为1之外其余位置均为0; $D_i^{gt}$为该帧中激光雷达到该点的欧式距离。 
+其中$\mathbf{S}_i$和$D_i$为点云帧集合中第$i$个点渲染出的语义向量和深度,与之对应的$\mathbf{S}_i^{gt}$同样为$N_{sem}$维向量,除语义标签索引位置为1之外其余位置均为0,$\mathbf{S}_i[j]$表示其中的第$j$个元素; $D_i^{gt}$为该帧中激光雷达到该点的欧式距离。 
 
 在基于SDF的建图中,需要被关注应该是其SDF值为0的点,因为这些点定义了表面。因此,越接近采样点云的采样点应该对最终SDF值的作用更大,反之,离点云越远的点其作用也更小。我们分别使用了SHINE-Mapping中的二元交叉熵损失函数和Vox-Fusion中的free-space loss和sdf loss两个L2损失函数。
 
-二元交叉熵函数的计算过程为,首先通过带超参数$\sigma$的sigmoid函数$S(x) = 1/(1 + e^{x/\sigma})$,其中超参数$\sigma$用来控制函数的平滑度,将sdf值映射到$[0,1]$区间上。给定一个采样点$\mathbf{x}_i\in \mathbb{R}^3$,我们计算其投影至表面(假设每个被采样的点云均在表面上)的距离$d_i$,使用经过映射后的值$l_i=S(d_i)$作为监督值。之后我们应用二元交叉熵作为我们的损失函数:
+SDF二元交叉熵函数的计算过程为,首先通过带超参数$\sigma$的sigmoid函数$S(x) = 1/(1 + e^{x/\sigma})$,其中超参数$\sigma$用来控制函数的平滑度,将sdf值映射到$[0,1]$区间上。给定一个采样点$\mathbf{x}_i\in \mathbb{R}^3$,我们计算其投影至表面(假设每个被采样的点云均在表面上)的距离$d_i$,使用经过映射后的值$l_i=S(d_i)$作为监督值。之后我们应用二元交叉熵作为我们的损失函数:
 \begin{equation}
     \mathcal{L}_{bce} = l_i\cdot \log(o_i)+(1-l_i)\cdot\log(1-o_i),\label{bce}
 \end{equation}
