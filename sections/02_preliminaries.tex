@@ -23,7 +23,7 @@ NeRF使用体渲染的方式,采用分层采样的方式进行积分,从而计�
 \begin{figure}[htbp]
     \includegraphics[scale = 1.2]{figures/nerf.png}
     \centering
-    \caption{NeRF场景隐式表达与可微渲染过程。沿着相机光线采样5D向量作为输入(a),通过MLP获得密度与颜色(b),最终通过体渲染的方式获得像素最终的颜色(c)。上述过程均可微,因此可以通过最小化观测值与计算值差距进行优化(d)。} \label{nerf}
+    \caption{NeRF场景隐式表达与可微渲染过程,图源NeRF\cite{nerf}。沿着相机光线采样5D向量作为输入(a),通过MLP获得密度与颜色(b),最终通过体渲染的方式获得像素最终的颜色(c)。上述过程均可微,因此可以通过最小化观测值与计算值差距进行优化(d)。} \label{nerf}
 \end{figure}
 \subsection{符号距离场(Signed Distance Function, SDF)}
 本文选择使用符号距离场函数\cite{sdf}来对场景的几何信息进行编码,而不使用体密度或占据概率。SDF是一种在空间中隐式表示表面的函数,其数学定义如下:
@@ -33,7 +33,7 @@ NeRF使用体渲染的方式,采用分层采样的方式进行积分,从而计�
 $$f(x) = \left\{
 \begin{aligned}
 &d(x,\partial\Omega)&&if\; x\in\Omega \\
-&-d(x,\partial\Omega)&&if\; x\notin\Omega\\
+-&d(x,\partial\Omega)&&if\; x\notin\Omega\\
 \end{aligned}
 \right.
 $$

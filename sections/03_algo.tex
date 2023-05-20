@@ -26,29 +26,23 @@
 \subsubsection{隐式表面渲染}
 相较于原始NeRF中使用MLP预测空间中任意一点的体密度,也就是占据概率, SDF能更好的表达几何信息,这也是为什么可以将其用于光线追踪中等任务中,因此本文在训练中直接回归SDF值。下列渲染公式表示了本文如何从嵌套在体素中的特征中获得该处点云最终的深度$D$和语义向量$\mathbf{S}$。假设本文在一条光线上采样$N$个点:
 \begin{equation}
-    s_i=F_\theta(\mbox{TriLerp}(T_i\mathbf{p}_i,\mathbf{e})),
-\end{equation}
-\begin{equation}
-    \mathbf{S}_i=G_\phi(\mbox{TriLerp}(T_i\mathbf{p}_i,\mathbf{e})),
-\end{equation}
-\begin{equation}
-    w_i=\mathbf{\sigma}(\frac{s_i}{tr})\cdot\mathbf{\sigma}(-\frac{s_i}{tr})
-\end{equation}
-\begin{equation}
-    \mathbf{S} = \frac{1}{\sum_{j=0}^{N-1}w_j}\sum_{i=0}^{N-1}w_i\cdot\mathbf{S}_i
-\end{equation}
-\begin{equation}
-    D = \frac{1}{\sum_{j=0}^{N-1}w_j}\sum_{i=0}^{N-1}w_i\cdot d_i
+\begin{alignedat}{2}
+    &s_i&&=F_\theta(\mbox{TriLerp}(T_i\mathbf{p}_i,\mathbf{e}))\;,\\
+    &\mathbf{S}_i&&=G_\phi(\mbox{TriLerp}(T_i\mathbf{p}_i,\mathbf{e}))\;,\\
+    &w_i&&=\mathbf{\sigma}(\frac{s_i}{tr})\cdot\mathbf{\sigma}(-\frac{s_i}{tr})\;,\\
+    &\mathbf{S} &&= \frac{1}{\sum_{j=0}^{N-1}w_j}\sum_{i=0}^{N-1}w_i\cdot\mathbf{S}_i\;,\\
+    &D &&= \frac{1}{\sum_{j=0}^{N-1}w_j}\sum_{i=0}^{N-1}w_i\cdot d_i
+\end{alignedat}
 \end{equation}
 其中$T_i$表示当前帧激光雷达的位置, $\mathbf{p}_i$表示该点在体素中的相对坐标,$\mbox{TriLerp}(\cdot , \cdot)$表示三线性插值函数, $\mathbf{e}$表示存储在体素中的特征。$F_\theta\mbox{和}G_\phi$分别为带可优化网络参数的解码器。为了计算每一个采样点的权重$w_i$, 本文使用sigmoid函数$\mathbf{\sigma}$计算sdf值$s_i$与先前设置的截断距离$tr$的比值。本文使用该权重对这条光线上的每个采样点的语义向量$\mathbf{S}_i$进行加权积分得到最终结果$\mathbf{S}$。同样的,为了得到深度值,本文对这条光线上每一个采样点的深度进行积分,其中$d_i$为第$i$个采样点的深度。
 \subsection{建图}
 \subsubsection{地图优化}
 为了监督网络训练,本文尝试了多种损失函数分别为semantic loss, depth loss, free-space loss, SDF loss和二元交叉熵BCE loss。其中semantic loss为多元交叉熵函数,depth loss为L1损失函数。给定采样点云集合$P$:
 \begin{equation}
-    \mathcal{L}_{sem} = -\frac{1}{|P|}\sum_{i=0}^{|P|}\sum_{j=0}^{N_{sum}}\mathbf{S}_i^{gt}[j]\log(\mathbf{S}_i[j]),
-\end{equation}
-\begin{equation}
-    \mathcal{L}_{depth} = \frac{1}{|P|}\sum_{i=0}^{|P|}\| D_i-D_i^{gt}\Vert ,
+\begin{alignedat}{2}
+    &\mathcal{L}_{sem} &&= -\frac{1}{|P|}\sum_{i=0}^{|P|}\sum_{j=0}^{N_{sum}}\mathbf{S}_i^{gt}[j]\log(\mathbf{S}_i[j])\;,\\
+    &\mathcal{L}_{depth} &&= \frac{1}{|P|}\sum_{i=0}^{|P|}\| D_i-D_i^{gt}\Vert\;,
+\end{alignedat}
 \end{equation}
 其中$\mathbf{S}_i$和$D_i$为点云帧集合中第$i$个点渲染出的语义向量和深度,与之对应的$\mathbf{S}_i^{gt}$同样为$N_{sem}$维向量,除语义标签索引位置为1之外其余位置均为0,$\mathbf{S}_i[j]$表示其中的第$j$个元素; $D_i^{gt}$为该帧中激光雷达到该点的欧式距离。 
 
@@ -61,10 +55,10 @@ SDF二元交叉熵函数的计算过程为,首先通过带超参数$\sigma$的si
 其中$o_i=S(F_\theta(\mbox{TriLerp}(T_i\mathbf{p}_i,\mathbf{e})))$,即经过映射后的渲染出的SDF值。
 free-space loss是为了使解码器学习截断距离$tr$,尤其是位于采样点表面附近的符号为正的截断区域内的截断值,然后使用sdf loss在截断区域内精确的学习SDF值以此来使解码器精确的表示表面。在渲染时本文将SDF值为$-tr$的点剔除。
 \begin{equation}
-    \begin{aligned}
-        &\mathcal{L}_{fs} = \frac{1}{|P|}\sum_{p\in P}\frac{1}{S_p^{fs}}\sum_{s\in S_p^{fs}}(D_s-tr)^2,\\
-    &\mathcal{L}_{sdf} = \frac{1}{|P|}\sum_{p\in P}\frac{1}{S_p^{tr}}\sum_{s\in S_p^{tr}}(D_s-D_s^{gt})^2.\label{voxloss}
-    \end{aligned}
+    \begin{alignedat}{2}
+        &\mathcal{L}_{fs} &&= \frac{1}{|P|}\sum_{p\in P}\frac{1}{S_p^{fs}}\sum_{s\in S_p^{fs}}(D_s-tr)^2,\\
+    &\mathcal{L}_{sdf} &&= \frac{1}{|P|}\sum_{p\in P}\frac{1}{S_p^{tr}}\sum_{s\in S_p^{tr}}(D_s-D_s^{gt})^2.\label{voxloss}
+    \end{alignedat}
 \end{equation}
 在优化时本文对地图特征与解码器均应用了ADAM\cite{adam}优化方法,最终的损失函数为:
 \begin{equation}
@@ -79,7 +73,7 @@ free-space loss是为了使解码器学习截断距离$tr$,尤其是位于采样
 \begin{figure}[htbp]
     \includegraphics[scale = 0.2]{figures/forgetting.jpg}
     \centering
-    \caption{在特征网格中进行增量建图时发生遗忘问题的例子} \label{forgetting}
+    \caption{在特征网格中进行增量建图时发生遗忘问题的例子,图源SHINE-Mapping\cite{shine}} \label{forgetting}
 \end{figure}
 将大规模场景以增量建图方法编码会受到灾难性遗忘(Catastrophic Forgetting)问题的限制。如图\ref{forgetting}所示,在每一帧中($T_0, T_1$和$T_2$),系统仅能观察到环境的部分信息。在增量建图中的第$T_0$帧,本文使用从区域A0获取到的信息优化存储在网格中的特征$V_0, V_1, V_2$和$V_3$,因此$V_0, V_1, V_2$和$V_3$这4个特征将能较精确的表示区域A0的几何信息。然而当相机向前移动,使用T1帧更新$V_0, V_1, V_2$和$V_3$的特征时,网络将仅关注生成$A_1$时的损失,不再关注$A_0$区域的表现。当相机进一步移动至$T_2$帧时,$V_2$和$V_3$中的特征将再次被更新,但本文无法保证不会影响到$A_0$和$A_1$区域的建图精度。这就是遗忘问题发生的原因。
 
