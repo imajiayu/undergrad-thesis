@@ -44,7 +44,7 @@ $$
 d(x,\partial\Omega) := \inf_{y\in \partial\Omega}d(x,y)
 $$
 
-简单的说,相较于显示的给定一个点与其法向量以表示一个表面,符号距离场函数映射了空间中一个点到某个表面的最近距离。如图如图\ref{sdf_figure}所示,值的符号取决于该位置位于平面的内部或外部。同时,本文为SDF设置了一个截断距离$tr$,即绝对值大于此值的SDF值被视为该值。
+简单的说,相较于显示的给定一个点与其法向量以表示一个表面,符号距离场函数映射了空间中一个点到某个表面的最近距离。如图如图\ref{sdf_figure}所示,值的符号取决于该位置位于平面的内部或外部。同时,为限制计算消耗与更精确的表示表面,本文为SDF设置了一个截断距离$tr$,即绝对值大于此值的SDF值被视为该值。
 \begin{figure}[htbp]
     \centering
     \includegraphics[scale=0.3]{figures/sdf_figure.jpeg}
