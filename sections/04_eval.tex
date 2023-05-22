@@ -82,7 +82,13 @@ F1\_score &= \frac{2\times Accuracy\times Recall}{Accuracy + Recall}
 \end{alignedat}
 \end{equation*}
 
-为评估重建语义建图的精度,我们在数据集点云中进行采样,使用采样点的坐标在完成建图的模型中进行推理得到采样点语义。随后我们将其与采样点数据集的label进行比较得到准确率等指标。
+为评估重建语义建图的精度,我们在数据集点云中进行采样,使用采样点的坐标在完成建图的模型中进行推理得到采样点语义。随后我们将其与采样点数据集的label进行比较计算得到。本文使用的指标为准确率和交并比,其计算公式为:
+\begin{equation*}
+    \begin{alignedat}{2}
+    \mbox{AUC} &=\quad\;\frac{TP}{TP+FP}\\
+    \mbox{IoU} &=\frac{TP}{TP + FP + FN}
+    \end{alignedat}
+\end{equation*}
 \subsection{实验准备}
 \subsubsection{数据集}
 本文的方法在3个公开的户外激光雷达数据集上进行了定性和定量的测试:(1)人工合成的MaiCity数据集\cite{maicity},模拟使用64线无噪声激光雷达对城市场景扫描序列组成。(2)真实世界的Newer College数据集\cite{ncd},该数据集在牛津大学内使用手持激光雷达记录,具有厘米级测量噪声和大量运动失真。其地面数据使用地面扫描仪获得。两者均带有地面附近的Ground Truth网格数据用作评估。(3) KITTI\cite{KITTI}是目前最大的自动驾驶场景下的计算机视觉算法评测数据集,SemanticKITTI\cite{SemanticKITTI}为其点云数据标注了语义信息。其数据包括激光雷达与RGB-D数据流等,每一帧中出现多个车辆或行人,包含超过20种语义标签类型。
@@ -105,25 +111,25 @@ F1\_score &= \frac{2\times Accuracy\times Recall}{Accuracy + Recall}
 我们进行了是否使用关键帧进行全局建图的对比实验。如图\ref{replay}所示,在左图中我们只使用增量建图线程对KITTI数据集00序列进行建图。地图重建的精细度与准确度随着当前帧位置而变化,即当前帧与当前帧紧邻的帧所影响到的部分场景效果较好。在增量建图线程运行至50帧时,地图右侧新观察到的部分建图效果较好,左侧首先建图的部分已经出现了遗忘问题,地图特征出现缺失,不再连续。当建图线程运行至100帧时,可以看到地图左侧大部分区域的地图细节已经被遗忘,只能解码出大致的轮廓,唯一只有地图右侧正在建图的区域有较好的建图效果。
 
 当使用\ref{forgettingsection}节描述的关键帧选择策略与开启全局建图线程后,如右图所示,即使激光雷达移动至100帧所在位置时,场景中所有已被观察部分的地图特征均被完整保留,遗忘问题得到了明显改善。通过这种方法我们可以降低神经网络的遗忘问题对增量建图的影响。
-\begin{figure}[H]
+\begin{figure}[htbp]
 	\centering
-	\begin{minipage}{0.45\linewidth}
+	\begin{minipage}{0.5\linewidth}
 		\centering
 		\includegraphics[width=1\linewidth]{figures/50w.png}
         \caption*{不使用replay策略训练50帧}
 	\end{minipage}\hfill
-	\begin{minipage}{0.45\linewidth}
+	\begin{minipage}{0.5\linewidth}
 		\centering
 		\includegraphics[width=1\linewidth]{figures/50o.png}
         \caption*{使用replay策略训练50帧}
 	\end{minipage}
     \vfill
-	\begin{minipage}{0.45\linewidth}
+	\begin{minipage}{0.5\linewidth}
 		\centering
 		\includegraphics[width=1\linewidth]{figures/100w.png}
         \caption*{不使用replay策略训练100帧}
 	\end{minipage}\hfill
-	\begin{minipage}{0.45\linewidth}
+	\begin{minipage}{0.5\linewidth}
 		\centering
 		\includegraphics[width=1\linewidth]{figures/100o.png}
         \caption*{使用replay策略训练100帧}
@@ -148,60 +154,256 @@ F1\_score &= \frac{2\times Accuracy\times Recall}{Accuracy + Recall}
 	\end{minipage}
     \caption{在KITTI数据集上使用sdf loss与free-space loss和使用bce loss的对比实验。左图结果显示特征网络和解码器并未精确学习到地图物体表面,所重建出的场景中地面与墙壁也远远不够平滑。当使用bce loss对SDF值进行监督训练时,建图效果得到明显改善,如右图所示。}\label{becornot}
 \end{figure}
-
+\clearpage
 本文使用Voxblox, VDB Fusion两种基于TSDF的传统视觉SLAM方法与SHINE-Mapping, Vox-Fusion两种基于神经隐式表达的建图方法在上述3种数据集上与本文方法进行了比较。除Vox-Fusion外,其余三种方法均可在点云数据集上运行。本文将Vox-Fusion从读取RGB-D数据流扩展至点云数据输入。在3种数据集中, Mai City数据集和New College数据集拥有目标网格的Ground Truth数据,因此可以进行几何精度评估。此外,本文使用SemanticKITTI数据集进行了语义建图的精度评估。本文将实验结果分为无噪声的合成场景与更具挑战性的真实场景进行讨论。
 \subsubsection{合成场景}
+对于无噪声的合成数据集Mai City,本文使用3种基于神经网络隐式表达的建图方法在Seq01序列上进行实验。如图\ref{mairesult}所示为实验结果。即使在无噪上的场景上,本文方法在细节部分仍优于Vox-Fusion,可以连续的保留车辆轮廓等细节信息。本文使用Mai City的Ground Truth网格数据对几何建图效果进行了评估,结果如表\ref{maicitymetric}所示。在各项指标上,本文方法优于Vox-Fusion。
+\begin{figure}[htbp]
+    \centering
+\begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_3_vox.png}
+\end{minipage}\hfill
+\begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_3_bce.png}
+\end{minipage}
+\vfill
+\begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_1_vox.png}
+\end{minipage}\hfill
+\begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_1_bce.png}
+\end{minipage}
+\vfill
+\begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_2_vox.png}
+    \caption*{(a)Ours}
+\end{minipage}\hfill
+\begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_2_bce.png}
+    \caption*{(b)Vox-Fusion}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_3_shine.png}
+    \end{minipage}\hfill
+    \begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_1_shine.png}
+    \end{minipage}
+    \vfill
+    \begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_2_shine.png}
+    \end{minipage}\caption*{(c)SHING-Mapping}
+    \caption{3种基于神经网络的隐式建图方法在Mai City数据集上的结果。}\label{mairesult}
+\end{figure}
 \begin{table}[htbp]
     \centering
-    \caption{定性测量的不同方法在Mai city数据集上建图的几何精度,将目标地图与重建地图之间对应点重合的阈值$threshold$设置为10cm}\label{maicitymetric}
+    \caption{定性测量的不同方法在Mai City数据集上建图的几何精度,将目标地图与重建地图之间对应点重合的阈值$threshold$设置为10cm。}\label{maicitymetric}
     \begin{tabular}[htbp]{llccccc}
         \toprule
-        \multicolumn{2}{l}{方法} & $\mathbf{Comp.}$ & $\mathbf{Acc.}$ & $\mathbf{C-l1}$ &  $\mathbf{Comp. Ratio}$ &$\mathbf{F1-score}$\\
+        \multicolumn{2}{l}{方法} & $\mathbf{Comp.}$(cm) & $\mathbf{Acc.}(\%)$ & $\mathbf{C-l1}$(cm) &  $\mathbf{Comp. Ratio}$(\%) &$\mathbf{F1-score}$\\
         \midrule
-        \multicolumn{2}{l}{Voxblox} & 7.1 & 1.8 & 4.8 &84.0&90.0\\
-        \multicolumn{2}{l}{VDB Fusion} & 6.9&1.3&4.5&90.2&94.1 \\
-        \multicolumn{2}{l}{SHINE-Mapping} & 3.2&1.1&2.9&95.2&95.9 \\
-        \multicolumn{2}{l}{Vox Fusion} & 0.2 \\
+        \multicolumn{2}{l}{Voxblox} & 7.1 & 93.3 & 4.8 &84.0&90.0\\
+        \multicolumn{2}{l}{VDB Fusion} & 6.9&92.1&4.5&90.2&94.1 \\
+        \multicolumn{2}{l}{SHINE-Mapping} & 3.2&94,6&2.9&95.2&95.9 \\
+        \multicolumn{2}{l}{Vox-Fusion} & 18.0 & 90.3 &11.2&76.3&82.8\\
         \midrule
-        \multicolumn{2}{l}{Ours+bce} & 0.2 \\
+        \multicolumn{2}{l}{Ours+bce} & 12.5&95.2 &8.3&85.7&90.2\\
         \bottomrule
     \end{tabular}
 \end{table}
 \subsubsection{真实场景}
+本文使用5种方法在KITTI数据集Seq00序列的前200帧上进行建图。实验结果如图\ref{kittiresult}所示。可以看到本文方法在建图效果上媲美SHINE-Mapping与VDB Fusion,以相同的建图速度和更低的分辨率达到了相同的效果。本文使用的优化方法在地图细节处理上效果优于Vox-Fusion,如车辆,墙壁等细节。实验证明本文方法可以在真实数据集上对室外大规模地图进行实时建图,在保留细节的同时保持地图的连续性。
+\begin{figure}[htbp]
+	\centering
+	\begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=1\linewidth]{figures/kitti_1_vox.png}
+	\end{minipage}\hfill
+	\begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=1\linewidth]{figures/kitti_1_bce.png}
+	\end{minipage}
+    \vfill
+    \begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=1\linewidth]{figures/kitti_2_vox.png}
+	\end{minipage}\hfill
+	\begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=1\linewidth]{figures/kitti_2_bce.png}
+	\end{minipage}
+    \vfill
+	\begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=1\linewidth]{figures/kitti_3_vox.png}
+        \caption*{(a)Ours}
+	\end{minipage}\hfill
+    \begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=1\linewidth]{figures/kitti_3_bce.png}
+        \caption*{(b)Vox-Fusion}
+	\end{minipage}
+\end{figure}
+\begin{figure}[htbp]
+        \centering
+    \begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=1\linewidth]{figures/kitti_1_shine.png}
+	\end{minipage}\hfill
+	\begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=1\linewidth]{figures/kitti_1_vdb.png}
+	\end{minipage}
+    \vfill
+    \begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=1\linewidth]{figures/kitti_2_shine.png}
+	\end{minipage}\hfill
+	\begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=1\linewidth]{figures/kitti_2_vdb.png}
+	\end{minipage}
+    \vfill
+	\begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=1\linewidth]{figures/kitti_3_shine.png}
+        \caption*{(c)SHINE-Mapping}
+	\end{minipage}\hfill
+    \begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=1\linewidth]{figures/kitti_3_vdb.png}
+        \caption*{(d)VDB Fusion}
+	\end{minipage}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/kitti_1_voxblox.png}
+    \end{minipage}\hfill
+    \begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/kitti_2_voxblox.png}
+    \end{minipage}
+    \vfill
+    \begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/kitti_3_voxblox.png}
+    \end{minipage}\caption*{(e)Voxblox}
+    \caption{5种不同方法在KITTI数据集Seq00序列上的结果。}\label{kittiresult}
+\end{figure}
+同样的,本文使用3种基于神经隐式表达的建图方法在New College数据集的Seq01序列上进行了实验实验结果如图\ref{ncdresult}所示。在具有更多噪声的场景中建图是具有挑战性的,所有方法的效果均低于在合成场景与相对噪声较小的真实场景。由于该数据集拥有网格地图的真实数据,本文对其几何建图精度进行了评估,结果如表\ref{ncdmetric}所示。由于噪声较大,该评估将阈值$threshold$设置为20cm。本文算法在几何精度指标上与SHINE-Mapping相近,效果优于Vox-Fusion。
+\begin{figure}[htbp]
+    \centering
+\begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_3_vox.png}
+\end{minipage}\hfill
+\begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_3_bce.png}
+\end{minipage}
+\vfill
+\begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_1_vox.png}
+\end{minipage}\hfill
+\begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_1_bce.png}
+\end{minipage}
+\vfill
+\begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_2_vox.png}
+    \caption*{(a)Ours}
+\end{minipage}\hfill
+\begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_2_bce.png}
+    \caption*{(b)Vox-Fusion}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_3_shine.png}
+    \end{minipage}\hfill
+    \begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_1_shine.png}
+    \end{minipage}
+    \vfill
+    \begin{minipage}{0.5\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/mai_2_shine.png}
+    \end{minipage}\caption*{(c)SHING-Mapping}
+    \caption{3种基于神经网络的隐式建图方法在New College数据集上的结果。}\label{ncdresult}
+\end{figure}
+
 \begin{table}[htbp]
     \centering
-    \caption{定性测量的不同方法在New College数据集上建图的几何精度,将目标地图与重建地图之间对应点重合的阈值$threshold$设置为20cm}\label{ncdmetric}
+    \caption{定性测量的不同方法在New College数据集上建图的几何精度,将目标地图与重建地图之间对应点重合的阈值$threshold$设置为20cm。}\label{ncdmetric}
     \begin{tabular}[htbp]{llccccc}
         \toprule
-        \multicolumn{2}{l}{方法} & $\mathbf{Comp.}$ & $\mathbf{Acc.}$ & $\mathbf{C-l1}$ &  $\mathbf{Comp. Ratio}$ &$\mathbf{F1-score}$\\
+        \multicolumn{2}{l}{方法} & $\mathbf{Comp.}$(cm) & $\mathbf{Acc.}(\%)$ & $\mathbf{C-l1}$(cm) &  $\mathbf{Comp. Ratio}$(\%) &$\mathbf{F1-score}$\\
         \midrule
-        \multicolumn{2}{l}{Voxblox} & 14.9 & 9.3 &12.1 &87.8&87.9\\
-        \multicolumn{2}{l}{VDB Fusion} & 12.0&6.9&9.4&91.3&92.6 \\
-        \multicolumn{2}{l}{SHINE-Mapping} & 10.0&6.7&8.4&93.6&93.7 \\
-        \multicolumn{2}{l}{Vox Fusion} & 30 & 123\\
+        \multicolumn{2}{l}{Voxblox} & 14.9 & 90.6 &12.1 &87.8&87.9\\
+        \multicolumn{2}{l}{VDB Fusion} & 12.0&92.1&9.4&91.3&92.6 \\
+        \multicolumn{2}{l}{SHINE-Mapping} & 10.0&93.5&8.4&93.6&93.7 \\
+        \multicolumn{2}{l}{Vox-Fusion} & 14.2 & 89.7& 13.6&89.4&89.0\\
         \midrule
-        \multicolumn{2}{l}{Ours+bce} & 0.2 \\
+        \multicolumn{2}{l}{Ours+bce} &10.3& 93.2 & 7.9 &93.5&91.3\\
         \bottomrule
     \end{tabular}
 \end{table}
+本文在KITTI数据集上进行了语义建图精度评估实验。如表\ref{kittimetrics}所示,在KITTI数据集的8个序列上,本文对每个关键帧采样1000个点云,使用训练完成的模型与解码器进行推理得到采样点的语义标签,并与SemanticKITTI数据集的语义标签进行比较以计算语义建图精度。结果显示在室外大规模场景下,本文语义建图方法可以达到约90\%的准确率。将预测出的语义标签映射为不同颜色后的效果如图\ref{semresult}所示。
+
 \begin{table}[htbp]
     \centering
-    \caption{kitti语义建图指标}\label{kittimetrics}
-    \begin{tabular}[htbp]{llcccc}
+    \caption{本文方法在KITTI数据集上的语义建图精度评估。}\label{kittimetrics}
+    \begin{tabular}[htbp]{cccccccccc}
         \toprule
-        \multicolumn{2}{l}{数据集} & 体素大小(m) & 采样间距(m) & 截断距离(m) &最大碰撞体素数 \\
+        \multicolumn{2}{l}{指标} & Seq00 & Seq01 & Seq02 &Seq03&Seq04&Seq05&Seq06&Seq07 \\
         \midrule
-        \multicolumn{2}{l}{KITTI} & 0.4 & 0.2 &0.3 &10\\
-        \multicolumn{2}{l}{Mai City} & 0.2 \\
-        \multicolumn{2}{l}{New College} & 0.2 \\
+        \multicolumn{2}{l}{AUC\%} & 91.4 & 92.0 & 89.7 & 90.6 &87.6&88.7&91.2&92.5\\
+        \multicolumn{2}{c}{IoU\%} & 83.2& 84.3&79.8&86.2&75.4&77.8&87.3&87.1 \\
         \bottomrule
     \end{tabular}
 \end{table}
+\begin{figure}[htbp]
+	\centering
+	\begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=1\linewidth]{figures/50w.png}
+	\end{minipage}\hfill
+	\begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=1\linewidth]{figures/50o.png}
+	\end{minipage}
+    \caption{在KITTI数据集上进行语义建图后,使用模型预测每一顶点的语义标签并将其映射为不同颜色。}\label{semresult}
+\end{figure}
+
 \subsection{算法时间与内存占用}
 为了加速本文方法,除了使用多线程并行实现增量建图与全局建图外,本文测量了渲染和训练过程中关键步骤的耗时,如体素分配,求交运算和体渲染等步骤,并进行了分析。本文实验在单张Nvidia RTX 3090显卡上进行,结果列于表\ref{times}中。可以看出使用C++实现的体素相关操作运行速度较快,在系统运行中耗时占比远小于其他操作。在采样1024条光线的情况下,本文系统中单次建图迭代需要40-50ms。设置每次建图过程中迭代10-50次,本文系统最快可以达到2Hz的建图速度。
 \begin{table}[htbp]
     \centering
-    \caption{系统中关键步骤平均耗时}\label{times}
+    \caption{系统中关键步骤平均耗时。}\label{times}
     \begin{tabular}[htbp]{llc}
         \toprule
         \multicolumn{2}{l}{步骤} & 时间\\
@@ -220,17 +422,16 @@ F1\_score &= \frac{2\times Accuracy\times Recall}{Accuracy + Recall}
 相较于同样使用基于体素的八叉树的SHING-Mapping方法,本文方法的内存消耗与其几乎相同。但NICE-SLAM方法使用4个网格地图并需要在系统启动前分配所有地图空间,与之相比本文方法在内存消耗上占据优势。详细结果如图\ref{memory}所示,本文方法可以在显著使用更少内存的同时实现更精细的建模。
 \begin{table}[htbp]
     \centering
-    \caption{不同方法在Mai City数据集01序列上建图的内存消耗。由于NICE-SLAM使用了4个特征网格,每一个特征网格对地图所有区域分配内存,因此内存消耗巨大。本文方法只使用一个特征网格,且只对观察到的地图区域分配体素与特征,使用较小的内存可以达到精细度更高的建图效果。}\label{memory}
+    \caption{不同方法在Mai City数据集01序列上建图的理论内存消耗。由于NICE-SLAM使用了4个特征网格,每一个特征网格对地图所有区域分配内存,因此内存消耗巨大。本文方法只使用一个特征网格,且只对观察到的地图区域分配体素与特征,使用较小的内存可以达到精细度更高的建图效果。}\label{memory}
     \begin{tabular}[htbp]{llcc}
         \toprule
         \multicolumn{2}{l}{方法} &解码器 & 地图特征\\
         \midrule
         \multicolumn{2}{l}{SHINE-Mapping} & 0.56MB & 7.09MB\\
-        \multicolumn{2}{l}{NICE-SLAM} & 0.22MB & 8GB\\
+        \multicolumn{2}{l}{NICE-SLAM} & 0.22MB & 560MB\\
         \midrule
         \multicolumn{2}{l}{Ours} & 1.04MB & 7.09MB\\
         \bottomrule
     \end{tabular}
 \end{table}
-% 本节分别使用鲲鲲内卷法，中中内卷法，伟伟内卷法进行时间比较。在3天内，让实验组和对照组分别在3天内写论文。鲲鲲卷卷法3天写出了一篇CVPR，中中卷卷法3天写出了一篇AAAI，对照组三天写出了一份10页报告，而伟伟卷卷法3天从黄铜上分到了白银。
 
