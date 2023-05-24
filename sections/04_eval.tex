@@ -155,7 +155,7 @@ F1\_score &= \frac{2\times Accuracy\times Recall}{Accuracy + Recall}
     \caption{在KITTI数据集上使用sdf loss与free-space loss和使用BCE loss的对比实验。左图结果显示特征网络和解码器并未精确学习到地图物体表面,所重建出的场景中地面与墙壁也远远不够平滑。当使用BCE loss对SDF值进行监督训练时,建图效果得到明显改善,如右图所示。}\label{becornot}
 \end{figure}
 \clearpage
-本文使用Voxblox和VDB Fusion,两种基于TSDF的传统视觉SLAM方法与SHINE-Mapping和 Vox-Fusion,两种基于神经隐式表达的建图方法在上述3种数据集上与本文方法进行了比较。除Vox-Fusion外,其余三种方法均可在点云数据集上运行。本文将Vox-Fusion从读取RGB-D数据流扩展至点云数据输入。在3种数据集中, Mai City数据集和New College数据集拥有目标网格的Ground Truth数据,因此可以进行几何精度评估。此外,本文使用SemanticKITTI数据集进行了语义建图的精度评估。本文将实验结果分为无噪声的合成场景与更具挑战性的真实场景进行讨论。
+本文使用Voxblox和VDB Fusion,两种基于TSDF的传统视觉SLAM方法与SHINE-Mapping和 Vox-Fusion,两种基于神经隐式表达的建图方法在上述3种数据集上与本文方法进行了比较,该实验基于相同的分辨率配置。除Vox-Fusion外,其余三种方法均可在点云数据集上运行。本文将Vox-Fusion从读取RGB-D数据流扩展至点云数据输入。在3种数据集中, Mai City数据集和New College数据集拥有目标网格的Ground Truth数据,因此可以进行几何精度评估。此外,本文使用SemanticKITTI数据集进行了语义建图的精度评估。本文将实验结果分为无噪声的合成场景与更具挑战性的真实场景进行讨论。
 \subsubsection{合成场景}
 对于无噪声的合成数据集Mai City,本文使用3种基于神经网络隐式表达的建图方法在Seq01序列上进行实验。如图\ref{mairesult}所示为实验结果。即使在无噪上的场景上,本文方法在细节部分仍优于Vox-Fusion,可以连续的保留车辆轮廓等细节信息。本文使用Mai City的Ground Truth网格数据对几何建图效果进行了评估,结果如表\ref{maicitymetric}所示。在各项指标上,本文方法优于Vox-Fusion。
 \begin{figure}[htbp]
@@ -310,11 +310,11 @@ F1\_score &= \frac{2\times Accuracy\times Recall}{Accuracy + Recall}
     \centering
 \begin{minipage}{0.5\linewidth}
     \centering
-    \includegraphics[width=1\linewidth]{figures/ncd_1_vox.png}
+    \includegraphics[width=1\linewidth]{figures/ncd_3_vox.png}
 \end{minipage}\hfill
 \begin{minipage}{0.5\linewidth}
     \centering
-    \includegraphics[width=1\linewidth]{figures/ncd_1_shine.png}
+    \includegraphics[width=1\linewidth]{figures/ncd_3_bce.png}
 \end{minipage}
 \vfill
 \begin{minipage}{0.5\linewidth}
@@ -323,17 +323,17 @@ F1\_score &= \frac{2\times Accuracy\times Recall}{Accuracy + Recall}
 \end{minipage}\hfill
 \begin{minipage}{0.5\linewidth}
     \centering
-    \includegraphics[width=1\linewidth]{figures/ncd_2_shine.png}
+    \includegraphics[width=1\linewidth]{figures/ncd_2_bec.png}
 \end{minipage}
 \vfill
 \begin{minipage}{0.5\linewidth}
     \centering
-    \includegraphics[width=1\linewidth]{figures/ncd_3_vox.png}
+    \includegraphics[width=1\linewidth]{figures/ncd_1_vox.png}
     \caption*{(a)Ours}
 \end{minipage}\hfill
 \begin{minipage}{0.5\linewidth}
     \centering
-    \includegraphics[width=1\linewidth]{figures/ncd_3_shine.png}
+    \includegraphics[width=1\linewidth]{figures/ncd_1_bce.png}
     \caption*{(b)Vox-Fusion}
 \end{minipage}
 \end{figure}
@@ -342,16 +342,17 @@ F1\_score &= \frac{2\times Accuracy\times Recall}{Accuracy + Recall}
     \centering
     \begin{minipage}{0.5\linewidth}
     \centering
-    \includegraphics[width=1\linewidth]{figures/ncd_1_vox.png}
+    \includegraphics[width=1\linewidth]{figures/ncd_3_shine.png}
     \end{minipage}\hfill
     \begin{minipage}{0.5\linewidth}
     \centering
-    \includegraphics[width=1\linewidth]{figures/ncd_2_vox.png}
+    \includegraphics[width=1\linewidth]{figures/ncd_2_shine.png}
     \end{minipage}
     \vfill
     \begin{minipage}{0.5\linewidth}
         \centering
-        \includegraphics[width=1\linewidth]{figures/ncd_3_vox.png}
+        \includegraphics[width=1\linewidth]{figures/ncd_1_shine.png}
+        \caption*{(c)SHINE-Mapping}
         \end{minipage}
     \caption{3种基于神经网络的隐式建图方法在New College数据集上的结果。}\label{ncdresult}
 \end{figure}
@@ -397,7 +398,7 @@ F1\_score &= \frac{2\times Accuracy\times Recall}{Accuracy + Recall}
 		\centering
 		\includegraphics[width=1\linewidth]{figures/sem2.png}
 	\end{minipage}
-    \caption{在KITTI数据集上进行语义建图后,使用模型预测每一顶点的语义标签并将其映射为不同颜色。}\label{semresult}
+    \caption{在KITTI数据集上进行语义建图后,使用模型预测每一顶点的语义标签并将其映射为不同颜色。其中黑色表示unlabeled顶点,占比极小。本文方法的语义建图可以达到较高的准确率与交并比。}\label{semresult}
 \end{figure}
 
 \subsection{算法时间与内存占用}
