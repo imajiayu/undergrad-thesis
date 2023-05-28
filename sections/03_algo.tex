@@ -1,12 +1,12 @@
 \section{算法设计}\label{algorithm}
 \subsection{系统框架}
-本文的系统框架如图\ref{system}所示。该系统以一系列连续的点云帧作为输入,相较于其他使用RGB-D图像作为输入的系统,无需使用相机姿态与内参。该系统维护了两个独立的线程:使用输入数据进行逐帧建图和进行关键帧选择的增量建图线程;在关键帧集合中选择优化对象进行批量训练,以对全局地图进行优化的全局建图线程。
+本文的系统框架如图\ref{system}所示。该系统以一系列连续的点云帧作为输入,相较于其他使用RGB-D图像作为输入的系统,无需使用相机姿态与内参。该系统维护了两个独立的线程:使用输入数据进行逐帧建图和进行关键帧选择的增量建图线程;在关键帧集合中选择优化对象进行批量训练,以对全局地图进行优化的全局建图线程。其中采样与渲染流水线将在\ref{implement}章具体展开。
 
 当系统启动时,增量建图线程加载数据,根据每一帧中的点云分配体素和初始化特征。在随后进行的可微渲染过程中,生成采样光线并使用真实数据对地图特征与解码器进行监督训练。在增量线程中使用了一个关键帧选择策略,将符合条件的点云帧放入关键帧集合。全局建图线程维护一个关键帧窗口,对被随机选中的关键帧同步的进行批量采样和渲染,进而对地图进行全局的优化。两个线程共享的数据包括关键帧集合,被嵌入特征的体素网格和解码器参数。
 \begin{figure}[htbp]
-    \includegraphics[scale = 0.355]{figures/system.jpg}
+    \includegraphics[scale = 0.355]{figures/system_1.jpg}
     \centering
-    \caption{系统概览。该系统维护了两个独立的线程,以带语义的点云作为输入,分别对地图进行增量建图与全局建图。两者共享了包括地图特征在内的资源数据,同步的对地图进行优化。}\label{system}
+    \caption{系统概览。该系统维护了两个独立的线程,以带语义的点云作为输入,分别对地图进行增量建图与全局建图。两者共享了包括地图特征在内的资源数据,同步地对地图进行优化。}\label{system}
 \end{figure}
 \subsection{基于点云的体渲染}
 本文使用点云数据进行监督训练,将每一次激光雷达扫描(Scan)的结果作为一帧$f$,因此整个系统输入的数据为一系列连续的点云帧。每一帧包含一个激光雷达3D坐标$\mathbf{x}\in \mathbb{R}^3 $与一个点云集合$P$。其中每一个点云$p\in P$都包含其自身的3D坐标$\mathbf{x}_p\in \mathbb{R}^3$与一个语义标签索引$s\in \mathbb{R}$。
@@ -37,7 +37,7 @@
 其中$T_i$表示当前帧激光雷达的位置, $\mathbf{p}_i$表示该点在体素中的相对坐标,$\mbox{TriLerp}(\cdot , \cdot)$表示三线性插值函数, $\mathbf{e}$表示存储在体素中的特征。$F_\theta\mbox{和}G_\phi$分别为带可优化网络参数的解码器。为了计算每一个采样点的权重$w_i$, 本文使用sigmoid函数$\mathbf{\sigma}$计算sdf值$s_i$与先前设置的截断距离$tr$的比值。本文使用该权重对这条光线上的每个采样点的语义向量$\mathbf{S}_i$进行加权积分得到最终结果$\mathbf{S}$。同样的,为了得到深度值,本文对这条光线上每一个采样点的深度进行积分,其中$d_i$为第$i$个采样点的深度。
 \subsection{建图}
 \subsubsection{地图优化}
-为了监督网络训练,本文尝试了多种损失函数,分别为semantic loss, depth loss, free-space loss, SDF loss和二元交叉熵BCE loss。其中semantic loss为多元交叉熵函数,depth loss为L1损失函数。给定采样点云集合$P$:
+为了监督网络训练,本文尝试了多种损失函数,分别为semantic loss, depth loss, free-space loss, SDF loss和二元交叉熵BCE loss。其中semantic loss为多元交叉熵函数, depth loss为L1损失函数。给定采样点云集合$P$:
 \begin{equation}
 \begin{alignedat}{2}
     &\mathcal{L}_{sem} &&= -\frac{1}{|P|}\sum_{i=0}^{|P|}\sum_{j=0}^{N_{sum}}\mathbf{S}_i^{gt}[j]\log(\mathbf{S}_i[j])\;,\\

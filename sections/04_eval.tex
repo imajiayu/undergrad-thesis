@@ -1,5 +1,8 @@
 \section{系统实现}\label{implement}
-本文使用Python与C++实现该算法。八叉树相关实现,如分配,索引,求交运算,采样等使用C++完成。 Python中主要实现了IncrementalMapping与GlobalMapping两个类。为实现两个线程共享数据,本文使用Python多线程管理工具multiprocessing.managers进行通讯,将地图体素,地图特征,关键帧集合与解码器及其参数共享,使得两个线程能够对上述数据进行同步更新。两个主要线程算法的伪代码如算法\ref{incrementalmapping}和算法\ref{globalmapping}所示。
+\subsection{增量建图与全局建图线程}
+本文使用Python与C++实现该算法。八叉树相关实现,如分配,索引,求交运算,采样等使用C++完成。 Python中主要实现了IncrementalMapping与GlobalMapping两个类。为实现两个线程共享数据,本文使用Python多线程管理工具multiprocessing.managers进行通讯,将地图体素,地图特征,关键帧集合与解码器及其参数共享,使得两个线程能够对上述数据进行同步更新。两个主要线程算法的伪代码如算法\ref{incrementalmapping}和算法\ref{globalmapping}所示。在具体的实现过程中,本文构造了一个用于激光雷达数据的转换器,将激光雷达数据转换为附带语义标签的点云数据,以此读入不同格式的激光雷达数据集。
+
+为了保证增量建图线程与全局建图线程在获取与修改共享资源,即体素网格,地图特征,解码器参数时,不发生资源竞争导致错误,本文使用了锁对上述资源进行管理。当进程访问和修改上锁的资源时会发生阻塞,等待其他线程操作结束后释放锁。除此之外,在训练结束后,本文实现了对模型进行采样推理并提取网格地图,并使用相关算法对结果进行精度评估,该部分将在\ref{metric}节详细介绍。
 \begin{algorithm}
     \caption{增量建图}\label{incrementalmapping}
     \begin{algorithmic}[1]
@@ -36,7 +39,6 @@
     \end{algorithmic}
 \end{algorithm}
 
-在具体的实现过程中,本文构造了一个用于激光雷达数据转换器,将激光雷达数据转换为附带语义标签的点云数据,以此读入不同格式的激光雷达数据集。为了保证增量建图线程与全局建图线程在获取与修改共享资源,即体素网格,地图特征,解码器参数时不发生资源竞争导致错误,我们使用了锁对上述资源进行管理。除此之外,在训练结束后,本文实现了对模型进行采样推理并提取网格地图,并使用相关算法对结果进行精度评估,该部分将在\ref{metric}部分详细介绍。
 \begin{algorithm}
     \caption{全局建图}\label{globalmapping}
     \begin{algorithmic}[1]
@@ -45,7 +47,7 @@
       \Ensure
         体素集合$S_{voxel}$;
         地图特征集合$S_{feature}$;
-        解码器网络参数$\theta, \phi$;
+        解码器网络参数$\theta, \phi$
         
       \Function{GlobalMapping}{$S_{keyframe}$}
       \State$optimizeTargets\gets$\Call{RandomSelectFrames}{$S_{keyframe}$}
@@ -55,6 +57,16 @@
       \EndFunction
     \end{algorithmic}
 \end{algorithm}
+
+\subsection{采样与渲染流程}
+\begin{figure}[htbp]
+    \includegraphics[scale = 0.31]{figures/renderpipeline.jpg}
+    \centering
+    \caption{采样与渲染流水线。}\label{renderpipeline}
+\end{figure}
+为了加快系统运行速度,除去算法在无效空间内的运算,本文针对体素分配的策略,对与渲染相关的无效采样点进行了剔除。如图\ref{renderpipeline}所示,首先对一次扫描的结果进行采样,随机选择作为优化目标帧中的点构造光线。为除去对渲染结果无影响的点,对每一条光线进行与已分配体素的求交运算。该求交运算将返回每条光线所碰撞体素的索引与数量,碰撞数量为0的光线将被剔除。
+
+根据在上一步得到的体素索引中,对每条光线进行等距采样,得到一系列采样点的空间坐标。系统将根据体素索引获取特征值索引。通过得到已分配体素的特征值进行三线性插值,进入解码器进行特征提取。最终计算损失函数后进行反向传播优化地图与解码器。
 \clearpage
 \section{实验}\label{numerical experiments}
 \subsection{地图提取}
@@ -65,7 +77,7 @@
     \caption{marching cube算法,图源维基百科\cite{marchingpicture}。首先将空间划分为立方体网格,根据顶点处数值与等值面的关系将立方体分为14种状态。最后根据等值面穿过边的状态生成相应的三角片元。}\label{marching}
 \end{figure}
 \subsection{评价指标}\label{metric}
-为评价重建地图的几何精度,本文使用KD树\cite{kd}(K-Dimension Tree)和KNN\cite{knn}(K-Nearest Neighbors)算法分别从两组顶点数据中计算最邻近点的距离,并使用以下5个指标对重建结果进行评价:距离误差,准确率,召回率,L1倒角距离(Chamfer-L1)和F1-score。进一步,我们将距离误差称为完成度(Completeness),将召回率称为完成率(Completeness Ratio)。
+为评价重建地图的几何精度,本文使用KD树\cite{kd}(K-Dimension Tree)和KNN\cite{knn}(K-Nearest Neighbors)算法分别从两组顶点数据中计算最邻近点的距离,并使用以下5个指标对重建结果进行评价:距离误差,准确率,召回率, L1倒角距离(Chamfer-L1)和F1-score。进一步,本文将距离误差称为完成度(Completeness),将召回率称为完成率(Completeness Ratio)。
 
 完成度指的是Ground Truth中每个点与其预测结果中的对应点的平均距离。Chamfer-L1距离,也称为曼哈顿倒角距离或L1倒角距离,用于衡量两个集合之间的最短距离。其计算方式是取目标形状的每个边缘点或曲线上的点与参考形状的边缘点或曲线上的点曼哈顿距离后计算平均值或求和。本文设置了一个阈值$threshold$以表示两个点是否重合,若两点距离$d<threshold$,则表示两者重合,即重建成功。使用该方法得出重建结果的准确率与召回率。
 
@@ -91,7 +103,7 @@ F1\_score &= \frac{2\times Accuracy\times Recall}{Accuracy + Recall}
 \end{equation*}
 \subsection{实验准备}
 \subsubsection{数据集}
-本文的方法在3个公开的户外激光雷达数据集上进行了定性和定量的测试:(1)人工合成的MaiCity数据集\cite{maicity},模拟使用64线无噪声激光雷达对城市场景扫描序列组成。(2)真实世界的Newer College数据集\cite{ncd},该数据集在牛津大学内使用手持激光雷达记录,具有厘米级测量噪声和大量运动失真。其地面数据使用地面扫描仪获得。两者均带有地面附近的Ground Truth网格数据用作评估。(3) KITTI\cite{KITTI}是目前最大的自动驾驶场景下的计算机视觉算法评测数据集,SemanticKITTI\cite{SemanticKITTI}为其点云数据标注了语义信息。其数据包括激光雷达与RGB-D数据流等,每一帧中出现多个车辆或行人,包含超过20种语义标签类型。
+本文的方法在3个公开的户外激光雷达数据集上进行了定性和定量的测试:(1)人工合成的MaiCity数据集\cite{maicity},模拟使用64线无噪声激光雷达对城市场景扫描序列组成。(2)真实世界的Newer College数据集\cite{ncd},该数据集在牛津大学内使用手持激光雷达记录,具有厘米级测量噪声和大量运动失真。其地面数据使用地面扫描仪获得。两者均带有地面附近的Ground Truth网格数据用作评估。(3) KITTI\cite{KITTI}是目前最大的自动驾驶场景下的计算机视觉算法评测数据集, SemanticKITTI\cite{SemanticKITTI}为其点云数据标注了语义信息。其数据包括激光雷达与RGB-D数据流等,每一帧中出现多个车辆或行人,包含超过20种语义标签类型。
 \subsubsection{实验配置}
 本文中的两个解码器均为两层全连接层,其中SDF解码器每层有128个节点,语义解码器有256个节点。对于每一帧数据采样1024个点进行训练,设定关键帧窗口大小为5。对于不同的数据集,本文使用表\ref{parameters}中设定的超参数进行训练:
 \begin{table}[htbp]
@@ -108,9 +120,9 @@ F1\_score &= \frac{2\times Accuracy\times Recall}{Accuracy + Recall}
     \end{tabular}
 \end{table}
 \subsection{实验结果}
-我们进行了是否使用关键帧进行全局建图的对比实验。如图\ref{replay}所示,在左图中我们只使用增量建图线程对KITTI数据集00序列进行建图。地图重建的精细度与准确度随着当前帧位置而变化,即当前帧与当前帧紧邻的帧所影响到的部分场景效果较好。在增量建图线程运行至50帧时,地图右侧新观察到的部分建图效果较好,左侧首先建图的部分已经出现了遗忘问题,地图特征出现缺失,不再连续。当建图线程运行至100帧时,可以看到地图左侧大部分区域的地图细节已经被遗忘,只能解码出大致的轮廓,唯一只有地图右侧正在建图的区域有较好的建图效果。
+本文进行了是否使用关键帧进行全局建图的对比实验。如图\ref{replay}所示,在左图中只使用增量建图线程对KITTI数据集00序列进行建图。地图重建的精细度与准确度随着当前帧位置而变化,即当前帧与当前帧紧邻的帧所影响到的部分场景效果较好。在增量建图线程运行至50帧时,地图右侧新观察到的部分建图效果较好,左侧首先建图的部分已经出现了遗忘问题,地图特征出现缺失,不再连续。当建图线程运行至100帧时,可以看到地图左侧大部分区域的地图细节已经被遗忘,只能解码出大致的轮廓,唯一只有地图右侧正在建图的区域有较好的建图效果。
 
-当使用\ref{forgettingsection}节描述的关键帧选择策略与开启全局建图线程后,如右图所示,即使激光雷达移动至100帧所在位置时,场景中所有已被观察部分的地图特征均被完整保留,遗忘问题得到了明显改善。通过这种方法我们可以降低神经网络的遗忘问题对增量建图的影响。
+当使用\ref{forgettingsection}节描述的关键帧选择策略与开启全局建图线程后,如右图所示,即使激光雷达移动至100帧所在位置时,场景中所有已被观察部分的地图特征均被完整保留,遗忘问题得到了明显改善。实验证明通过这种方法可以降低神经网络的遗忘问题对增量建图的影响。
 \begin{figure}[htbp]
 	\centering
 	\begin{minipage}{0.5\linewidth}
@@ -137,7 +149,7 @@ F1\_score &= \frac{2\times Accuracy\times Recall}{Accuracy + Recall}
     \caption{在KITTI数据集上是否使用关键帧replay策略的对比实验。在没有使用全局建图线程选择关键帧进行建图的情况下,即使激光雷达只前进50帧时,之前训练的地图部分也会出现遗忘问题。当激光雷达前进100帧时,前50帧所内存的地图信息已经变得非常稀疏。右图使用关键帧选择与全局建图方法后,遗忘问题得到了明显改善,先前的建图准确度与当前帧所在位置无显著联系。}\label{replay}
 \end{figure}
 
-同时本文使用式\ref{bce}中的二元交叉熵BCE loss和式\ref{voxloss}中sdf loss与free-space loss结合的方式进行了对比,在KITTI数据集上的结果如图\ref{becornot}所示。在左图中,我们将sdf loss与free-space loss设置相等的权重,结果显示网络并没有准确的学习到场景的表面信息,部分地图区域出现不连续的现象,且地面与墙壁的平滑度没有达到令人满意的程度。在右图中,我们关闭了对前两者损失函数的计算,只采用SDF的二元交叉熵函数对SDF值进行监督,可以看到地图的大部份表面处于连续状态,地面与墙壁等区域较为光滑。这说明网络较好的学习到了SDF值以复原出表面。
+同时本文使用式\ref{bce}中的二元交叉熵BCE loss和式\ref{voxloss}中sdf loss与free-space loss结合的方式进行了对比,在KITTI数据集上的结果如图\ref{becornot}所示。在左图中,将sdf loss与free-space loss设置相等的权重,结果显示网络并没有准确的学习到场景的表面信息,部分地图区域出现不连续的现象,且地面与墙壁的平滑度没有达到令人满意的程度。在右图中,关闭了对前两者损失函数的计算,只采用SDF的二元交叉熵函数对SDF值进行监督,可以看到地图的大部份表面处于连续状态,地面与墙壁等区域较为光滑。这说明网络较好的学习到了SDF值以复原出表面。
 
 基于上述结果,可以得出在监督SDF训练时,使用Sigmoid函数将其映射到[0,1]的区间并使用二元交叉熵损失函数可以使网络更好的学习到场景表面。原因在于Sigmoid函数可以自动的为预测出的SDF值设置截断距离$tr$,以代替sdf loss。并且在物体的表面附近,也就是SDF值期望为0的区域, Sigmoid函数的梯度非常大,使得损失函数输出的结果显著,这也是训练过程中所期望的。
 \begin{figure}[htbp]
