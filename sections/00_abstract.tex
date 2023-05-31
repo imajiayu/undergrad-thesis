@@ -3,7 +3,7 @@
 
     本文实现了一种基于体素的显式与隐式相结合的实时建图方法,以稀疏点云作为输入,将地图的几何,外观与语义信息存储在体素网格中,使用多个解码器进行提取。其中,本文将几何信息编码为连续的符号距离场函数,使用基于表面的神经网络重建方法进行渲染。进一步,本文使用了基于八叉树的体素管理方法划分场景,可以实现地图的动态扩展和特征信息的快速查找,并且无需场景的先验信息。本文的系统使用多线程进行加速,并且设计了一个关键帧选择策略来克服神经网络的遗忘问题。
     
-    除实现上述方法外,本文实现了一系列对地图重建几何精度与语义建图精度进行定性与定量评估的流程,并扩展和使用多种传统视觉定位与建图方法与神经隐式表示方法在合成场景数据集与真实场景数据集上分别进行了对比实验,对结果进行了分析与讨论。本文的代码公开在\href{https://github.com/tiev-tongji/semantic-neural-lidar-mapping}{https://github.com/tiev-tongji/semantic-neural-lidar-mapping}
+    除实现上述方法外,本文实现了一系列对地图重建几何精度与语义建图精度进行定性与定量评估的流程,并扩展和使用多种传统视觉定位与建图方法与神经隐式表示方法在合成场景数据集与真实场景数据集上分别进行了对比实验,对结果进行了分析与讨论。实验证明本文可以满足自动驾驶仿真的相关需求。本文的代码公开在\href{https://github.com/tiev-tongji/semantic-neural-lidar-mapping}{https://github.com/tiev-tongji/semantic-neural-lidar-mapping}
 }{神经辐射场,实时定位与建图,八叉树,自动驾驶,语义建图}
 
 \MakeAbstractEng{
@@ -11,5 +11,5 @@
 
     We implement a real-time voxel-based mapping method combining explicit and implicit. It using sparse point clouds as input, storing the geometric, appearance, and semantic information of the map in a voxel grid and extracting it using multiple decoders. We model the scene geometry within local voxels as a continuous signed distance function, then use neural surface reconstrction method to render. Furthermore, we use a octree-based voxel management method to divide the scene, enabling the dynamic expansion of the map and the rapid search of feature information, and do not need the prior information of the scene. Our system uses multithreading for acceleration, and a keyframe selection strategy is designed to overcome the neural network forgetting problem. 
     
-    In addition to implementing the aforementioned methods, we presents a series of qualitative and quantitative evaluations for assessing the geometric accuracy and semantic mapping precision of the map reconstruction. Various traditional visual localization and mapping methods, as well as neural implicit representation methods, are extended and utilized for comparative experiments on synthetic and real-world scene datasets. The results are analyzed and discussed. Our source code is publicly available at \href{https://github.com/tiev-tongji/semantic-neural-lidar-mapping}{https://github.com/tiev-tongji/semantic-neural-lidar-mapping}
+    In addition to implementing the aforementioned methods, we presents a series of qualitative and quantitative evaluations for assessing the geometric accuracy and semantic mapping precision of the map reconstruction. Various traditional visual localization and mapping methods, as well as neural implicit representation methods, are extended and utilized for comparative experiments on synthetic and real-world scene datasets. The results are analyzed and discussed. The results show that our algorithm can meet the requirements of autonomous driving simulation. Our source code is publicly available at \href{https://github.com/tiev-tongji/semantic-neural-lidar-mapping}{https://github.com/tiev-tongji/semantic-neural-lidar-mapping}
 }{NeRF, SLAM, octree, autonomous driving, semantic mapping}

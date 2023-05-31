@@ -73,7 +73,7 @@ free-space loss是为了使解码器学习截断距离$tr$,尤其是位于采样
 \begin{figure}[htbp]
     \includegraphics[scale = 0.2]{figures/forgetting.jpg}
     \centering
-    \caption{在特征网格中进行增量建图时发生遗忘问题的例子,图源SHINE-Mapping\cite{shine}} \label{forgetting}
+    \caption{在特征网格中进行增量建图时发生遗忘问题的例子, SHINE-Mapping\cite{shine}} \label{forgetting}
 \end{figure}
 将大规模场景以增量建图方法编码会受到灾难性遗忘(Catastrophic Forgetting)问题的限制。如图\ref{forgetting}所示,在每一帧中($T_0, T_1$和$T_2$),系统仅能观察到环境的部分信息。在增量建图中的第$T_0$帧,使用从区域A0获取到的信息优化存储在网格中的特征$V_0, V_1, V_2$和$V_3$,因此$V_0, V_1, V_2$和$V_3$这4个特征将能较精确的表示区域A0的几何信息。然而当相机向前移动,使用T1帧更新$V_0, V_1, V_2$和$V_3$的特征时,网络将仅关注生成$A_1$时的损失,不再关注$A_0$区域的表现。当相机进一步移动至$T_2$帧时,$V_2$和$V_3$中的特征将再次被更新,但网络无法保证不会影响到$A_0$和$A_1$区域的建图精度。这就是遗忘问题发生的原因。
 
