@@ -8,73 +8,61 @@
 
 
 
-@article{vox,
-	abstract = {In this work, we present a dense tracking and mapping system named Vox-Fusion, which seamlessly fuses neural implicit representations with traditional volumetric fusion methods. Our approach is inspired by the recently developed implicit mapping and positioning system and further extends the idea so that it can be freely applied to practical scenarios. Specifically, we leverage a voxel-based neural implicit surface representation to encode and optimize the scene inside each voxel. Furthermore, we adopt an octree-based structure to divide the scene and support dynamic expansion, enabling our system to track and map arbitrary scenes without knowing the environment like in previous works. Moreover, we proposed a high-performance multi-process framework to speed up the method, thus supporting some applications that require real-time performance. The evaluation results show that our methods can achieve better accuracy and completeness than previous methods. We also show that our Vox-Fusion can be used in augmented reality and virtual reality applications. Our source code is publicly available at https://github.com/zju3dv/Vox-Fusion.},
-	author = {Xingrui Yang and Hai Li and Hongjia Zhai and Yuhang Ming and Yuqian Liu and Guofeng Zhang},
-	date-added = {2023-04-11 22:57:01 +0800},
-	date-modified = {2023-04-11 22:57:01 +0800},
-	doi = {10.1109/ISMAR55827.2022.00066},
-	eprint = {2210.15858},
-	month = {10},
-	title = {Vox-Fusion: Dense Tracking and Mapping with Voxel-based Neural Implicit Representation},
-	url = {https://arxiv.org/pdf/2210.15858.pdf},
-	year = {2022},
-	bdsk-url-1 = {https://arxiv.org/pdf/2210.15858.pdf},
-	bdsk-url-2 = {https://doi.org/10.1109/ISMAR55827.2022.00066}}
+@inproceedings{vox,
+  title={Vox-Fusion: Dense Tracking and Mapping with Voxel-based Neural Implicit Representation},
+  author={Yang, Xingrui and Li, Hai and Zhai, Hongjia and Ming, Yuhang and Liu, Yuqian and Zhang, Guofeng},
+  booktitle={2022 IEEE International Symposium on Mixed and Augmented Reality (ISMAR)},
+  pages={499--507},
+  year={2022},
+  organization={IEEE},
+  address={New Orleans, USA}
+}
 
-@article{imap,
-	abstract = {We show for the first time that a multilayer perceptron (MLP) can serve as the only scene representation in a real-time SLAM system for a handheld RGB-D camera. Our network is trained in live operation without prior data, building a dense, scene-specific implicit 3D model of occupancy and colour which is also immediately used for tracking. Achieving real-time SLAM via continual training of a neural network against a live image stream requires significant innovation. Our iMAP algorithm uses a keyframe structure and multi-processing computation flow, with dynamic information-guided pixel sampling for speed, with tracking at 10 Hz and global map updating at 2 Hz. The advantages of an implicit MLP over standard dense SLAM techniques include efficient geometry representation with automatic detail control and smooth, plausible filling-in of unobserved regions such as the back surfaces of objects.},
-	author = {Edgar Sucar and Shikun Liu and Joseph Ortiz and Andrew J. Davison},
-	date-added = {2023-04-11 22:56:42 +0800},
-	date-modified = {2023-04-11 22:56:42 +0800},
-	eprint = {2103.12352},
-	month = {03},
-	title = {iMAP: Implicit Mapping and Positioning in Real-Time},
-	url = {https://arxiv.org/pdf/2103.12352.pdf},
-	year = {2021},
-	bdsk-url-1 = {https://arxiv.org/pdf/2103.12352.pdf}}
+@inproceedings{imap,
+  title={iMAP: Implicit mapping and positioning in real-time},
+  author={Sucar, Edgar and Liu, Shikun and Ortiz, Joseph and Davison, Andrew J},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
+  pages={6229--6238},
+  year={2021},
+  address={Montreal, Canada}
+}
 
 @article{nerf,
-	abstract = {We present a method that achieves state-of-the-art results for synthesizing novel views of complex scenes by optimizing an underlying continuous volumetric scene function using a sparse set of input views. Our algorithm represents a scene using a fully-connected (non-convolutional) deep network, whose input is a single continuous 5D coordinate (spatial location $(x,y,z)$ and viewing direction $(θ, φ)$) and whose output is the volume density and view-dependent emitted radiance at that spatial location. We synthesize views by querying 5D coordinates along camera rays and use classic volume rendering techniques to project the output colors and densities into an image. Because volume rendering is naturally differentiable, the only input required to optimize our representation is a set of images with known camera poses. We describe how to effectively optimize neural radiance fields to render photorealistic novel views of scenes with complicated geometry and appearance, and demonstrate results that outperform prior work on neural rendering and view synthesis. View synthesis results are best viewed as videos, so we urge readers to view our supplementary video for convincing comparisons.},
-	author = {Ben Mildenhall and Pratul P. Srinivasan and Matthew Tancik and Jonathan T. Barron and Ravi Ramamoorthi and Ren Ng},
-	date-added = {2023-04-11 22:56:02 +0800},
-	date-modified = {2023-04-11 22:56:02 +0800},
-	eprint = {2003.08934},
-	month = {03},
-	title = {NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis},
-	url = {https://arxiv.org/pdf/2003.08934.pdf},
-	year = {2020},
-	bdsk-url-1 = {https://arxiv.org/pdf/2003.08934.pdf}}
+  title={Nerf: Representing scenes as neural radiance fields for view synthesis},
+  author={Mildenhall, Ben and Srinivasan, Pratul P and Tancik, Matthew and Barron, Jonathan T and Ramamoorthi, Ravi and Ng, Ren},
+  journal={Communications of the ACM},
+  volume={65},
+  number={1},
+  pages={99--106},
+  year={2021},
+  publisher={ACM New York, NY, USA}
+}
 
-@article{nice,
-	abstract = {Neural implicit representations have recently shown encouraging results in various domains, including promising progress in simultaneous localization and mapping (SLAM). Nevertheless, existing methods produce over-smoothed scene reconstructions and have difficulty scaling up to large scenes. These limitations are mainly due to their simple fully-connected network architecture that does not incorporate local information in the observations. In this paper, we present NICE-SLAM, a dense SLAM system that incorporates multi-level local information by introducing a hierarchical scene representation. Optimizing this representation with pre-trained geometric priors enables detailed reconstruction on large indoor scenes. Compared to recent neural implicit SLAM systems, our approach is more scalable, efficient, and robust. Experiments on five challenging datasets demonstrate competitive results of NICE-SLAM in both mapping and tracking quality. Project page: https://pengsongyou.github.io/nice-slam},
-	author = {Zihan Zhu and Songyou Peng and Viktor Larsson and Weiwei Xu and Hujun Bao and Zhaopeng Cui and Martin R. Oswald and Marc Pollefeys},
-	date-added = {2023-03-19 15:35:40 +0800},
-	date-modified = {2023-03-19 15:35:40 +0800},
-	eprint = {2112.12130},
-	month = {12},
-	title = {NICE-SLAM: Neural Implicit Scalable Encoding for SLAM},
-	url = {https://arxiv.org/pdf/2112.12130.pdf},
-	year = {2021},
-	bdsk-url-1 = {https://arxiv.org/pdf/2112.12130.pdf}}
+@inproceedings{nice,
+  title={Nice-slam: Neural implicit scalable encoding for slam},
+  author={Zhu, Zihan and Peng, Songyou and Larsson, Viktor and Xu, Weiwei and Bao, Hujun and Cui, Zhaopeng and Oswald, Martin R and Pollefeys, Marc},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  pages={12786--12796},
+  year={2022},
+  address={New Orleans, USA}
+}
 
-@article{block,
-	abstract = {We present Block-NeRF, a variant of Neural Radiance Fields that can represent large-scale environments. Specifically, we demonstrate that when scaling NeRF to render city-scale scenes spanning multiple blocks, it is vital to decompose the scene into individually trained NeRFs. This decomposition decouples rendering time from scene size, enables rendering to scale to arbitrarily large environments, and allows per-block updates of the environment. We adopt several architectural changes to make NeRF robust to data captured over months under different environmental conditions. We add appearance embeddings, learned pose refinement, and controllable exposure to each individual NeRF, and introduce a procedure for aligning appearance between adjacent NeRFs so that they can be seamlessly combined. We build a grid of Block-NeRFs from 2.8 million images to create the largest neural scene representation to date, capable of rendering an entire neighborhood of San Francisco.},
-	author = {Matthew Tancik and Vincent Casser and Xinchen Yan and Sabeek Pradhan and Ben Mildenhall and Pratul P. Srinivasan and Jonathan T. Barron and Henrik Kretzschmar},
-	date-added = {2023-03-19 15:35:24 +0800},
-	date-modified = {2023-03-19 15:35:24 +0800},
-	eprint = {2202.05263},
-	month = {02},
-	title = {Block-NeRF: Scalable Large Scene Neural View Synthesis},
-	url = {https://arxiv.org/pdf/2202.05263.pdf},
-	year = {2022},
-	bdsk-url-1 = {https://arxiv.org/pdf/2202.05263.pdf}}
+@InProceedings{block,
+    author    = {Tancik, Matthew and Casser, Vincent and Yan, Xinchen and Pradhan, Sabeek and Mildenhall, Ben and Srinivasan, Pratul P. and Barron, Jonathan T. and Kretzschmar, Henrik},
+    title     = {Block-NeRF: Scalable Large Scene Neural View Synthesis},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {June},
+    year      = {2022},
+    pages     = {8248-8258},
+    address = {New Orleans, USA}
+}
 
 @inproceedings{SemanticKITTI,
   author = {J. Behley and M. Garbade and A. Milioto and J. Quenzel and S. Behnke and C. Stachniss and J. Gall},
   title = {{SemanticKITTI: A Dataset for Semantic Scene Understanding of LiDAR Sequences}},
   booktitle = {Proc. of the IEEE/CVF International Conf.~on Computer Vision (ICCV)},
-  year = {2019}
+  year = {2019},
+  address         = {Seoul, Korea}
 }
 
 @inproceedings{KITTI,
@@ -82,16 +70,16 @@
   title = {{Are we ready for Autonomous Driving? The KITTI Vision Benchmark Suite}},
   booktitle = {Proc.~of the IEEE Conf.~on Computer Vision and Pattern Recognition (CVPR)},
   pages = {3354--3361},
-  year = {2012}
+  year = {2012},
+  address         = {Providence, USA}
 }
 
-@misc{shine,
-      title={SHINE-Mapping: Large-Scale 3D Mapping Using Sparse Hierarchical Implicit Neural Representations}, 
-      author={Xingguang Zhong and Yue Pan and Jens Behley and Cyrill Stachniss},
-      year={2023},
-      eprint={2210.02299},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+@inproceedings{shine,
+  title={SHINE-Mapping: Large-Scale 3D Mapping Using Sparse Hierarchical Implicit NEural Representations},
+  author={Zhong, Xingguang and Pan, Yue and Behley, Jens and Stachniss, Cyrill},
+  booktitle = {Proceedings of the IEEE International Conference on Robotics and Automation (ICRA)},
+  year={2023},
+  address         = {London, UK}
 }
 
 @InProceedings{nrgbd,
@@ -103,22 +91,30 @@
     pages     = {6290-6301}
 }
 
-@misc{sem_nerf,
-      title={In-Place Scene Labelling and Understanding with Implicit Scene Representation}, 
-      author={Shuaifeng Zhi and Tristan Laidlow and Stefan Leutenegger and Andrew J. Davison},
-      year={2021},
-      eprint={2103.15875},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+@inproceedings{sem_nerf,
+  title={Semantic implicit neural scene representations with semi-supervised training},
+  author={Kohli, Amit Pal Singh and Sitzmann, Vincent and Wetzstein, Gordon},
+  booktitle={2020 International Conference on 3D Vision (3DV)},
+  pages={423--433},
+  year={2020},
+  organization={IEEE},
+  address={Prague, Czechia}
 }
 
-@misc{adam,
-      title={Adam: A Method for Stochastic Optimization}, 
-      author={Diederik P. Kingma and Jimmy Ba},
-      year={2017},
-      eprint={1412.6980},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
+@inproceedings{DBLP:journals/corr/KingmaB14,
+  author       = {Diederik P. Kingma and
+                  Jimmy Ba},
+  editor       = {Yoshua Bengio and
+                  Yann LeCun},
+  title        = {Adam: {A} Method for Stochastic Optimization},
+  booktitle    = {3rd International Conference on Learning Representations, {ICLR} 2015,
+                  San Diego, CA, USA, May 7-9, 2015, Conference Track Proceedings},
+  year         = {2015},
+  url          = {http://arxiv.org/abs/1412.6980},
+  timestamp    = {Thu, 25 Jul 2019 14:25:37 +0200},
+  biburl       = {https://dblp.org/rec/journals/corr/KingmaB14.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org},
+  address         = {San Diego, USA}
 }
 
 @inproceedings{sdf,
@@ -137,15 +133,16 @@ keywords = {range image integration, surface fitting, three-dimensional shape re
 series = {SIGGRAPH '96}
 }
 
-@ARTICLE{traditionalslam,
-  author={Vespa, Emanuele and Nikolov, Nikolay and Grimm, Marius and Nardi, Luigi and Kelly, Paul H. J. and Leutenegger, Stefan},
-  journal={IEEE Robotics and Automation Letters}, 
-  title={Efficient Octree-Based Volumetric SLAM Supporting Signed-Distance and Occupancy Mapping}, 
-  year={2018},
+@article{traditionalslam,
+  title={Efficient octree-based volumetric SLAM supporting signed-distance and occupancy mapping},
+  author={Vespa, Emanuele and Nikolov, Nikolay and Grimm, Marius and Nardi, Luigi and Kelly, Paul HJ and Leutenegger, Stefan},
+  journal={IEEE Robotics and Automation Letters},
   volume={3},
   number={2},
-  pages={1144-1151},
-  doi={10.1109/LRA.2018.2792537}}
+  pages={1144--1151},
+  year={2018},
+  publisher={IEEE}
+}
 
 @INPROCEEDINGS{DTAM,
   author={Newcombe, Richard A. and Lovegrove, Steven J. and Davison, Andrew J.},
@@ -155,7 +152,8 @@ series = {SIGGRAPH '96}
   volume={},
   number={},
   pages={2320-2327},
-  doi={10.1109/ICCV.2011.6126513}}
+  doi={10.1109/ICCV.2011.6126513},
+  address={Barcelona, Spain}}
 
   @INPROCEEDINGS{tradition1,
   author={Newcombe, Richard A. and Izadi, Shahram and Hilliges, Otmar and Molyneaux, David and Kim, David and Davison, Andrew J. and Kohi, Pushmeet and Shotton, Jamie and Hodges, Steve and Fitzgibbon, Andrew},
@@ -165,52 +163,55 @@ series = {SIGGRAPH '96}
   volume={},
   number={},
   pages={127-136},
-  doi={10.1109/ISMAR.2011.6092378}}
+  doi={10.1109/ISMAR.2011.6092378},
+  address={Basel, Switzerland}}
 
-@misc{tradition2,
-      title={BundleFusion: Real-time Globally Consistent 3D Reconstruction using On-the-fly Surface Re-integration}, 
-      author={Angela Dai and Matthias Nießner and Michael Zollhöfer and Shahram Izadi and Christian Theobalt},
-      year={2017},
-      eprint={1604.01093},
-      archivePrefix={arXiv},
-      primaryClass={cs.GR}
+@article{tradition2,
+  title={Bundlefusion: Real-time globally consistent 3d reconstruction using on-the-fly surface reintegration},
+  author={Dai, Angela and Nie{\ss}ner, Matthias and Zollh{\"o}fer, Michael and Izadi, Shahram and Theobalt, Christian},
+  journal={ACM Transactions on Graphics (ToG)},
+  volume={36},
+  number={4},
+  pages={1},
+  year={2017},
+  publisher={ACM New York, NY, USA}
 }
 
-@misc{CodeSLAM,
-      title={CodeSLAM - Learning a Compact, Optimisable Representation for Dense Visual SLAM}, 
-      author={Michael Bloesch and Jan Czarnowski and Ronald Clark and Stefan Leutenegger and Andrew J. Davison},
-      year={2019},
-      eprint={1804.00874},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+@inproceedings{CodeSLAM,
+  title={CodeSLAM—learning a compact, optimisable representation for dense visual SLAM},
+  author={Bloesch, Michael and Czarnowski, Jan and Clark, Ronald and Leutenegger, Stefan and Davison, Andrew J},
+  booktitle={Proceedings of the IEEE conference on computer vision and pattern recognition},
+  pages={2560--2568},
+  year={2018}
 }
 
-@misc{scenecode,
-      title={SceneCode: Monocular Dense Semantic Reconstruction using Learned Encoded Scene Representations}, 
-      author={Shuaifeng Zhi and Michael Bloesch and Stefan Leutenegger and Andrew J. Davison},
-      year={2019},
-      eprint={1903.06482},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+@inproceedings{scenecode,
+  title={Scenecode: Monocular dense semantic reconstruction using learned encoded scene representations},
+  author={Zhi, Shuaifeng and Bloesch, Michael and Leutenegger, Stefan and Davison, Andrew J},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  pages={11776--11785},
+  year={2019},
+  address={Long Beach, USA}
 }
 
-@misc{semantic2,
-      title={Semantic Implicit Neural Scene Representations With Semi-Supervised Training}, 
-      author={Amit Kohli and Vincent Sitzmann and Gordon Wetzstein},
-      year={2021},
-      eprint={2003.12673},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+@inproceedings{semantic2,
+  title={Semantic implicit neural scene representations with semi-supervised training},
+  author={Kohli, Amit Pal Singh and Sitzmann, Vincent and Wetzstein, Gordon},
+  booktitle={2020 International Conference on 3D Vision (3DV)},
+  pages={423--433},
+  year={2020},
+  organization={IEEE},
+  address={Prague, Czechia}
 }
 
 @inproceedings{maicity,
-author = {I. Vizzo and X. Chen and N. Chebrolu and J. Behley and C. Stachniss},
-title = {{Poisson Surface Reconstruction for LiDAR Odometry and Mapping}},
-booktitle = icra,
-year = 2021,
-url = {http://www.ipb.uni-bonn.de/pdfs/vizzo2021icra.pdf},
-codeurl = {https://github.com/PRBonn/puma},
-videourl = {https://youtu.be/7yWtYWaO5Nk}
+  title={Poisson surface reconstruction for LiDAR odometry and mapping},
+  author={Vizzo, Ignacio and Chen, Xieyuanli and Chebrolu, Nived and Behley, Jens and Stachniss, Cyrill},
+  booktitle={2021 IEEE International Conference on Robotics and Automation (ICRA)},
+  pages={5624--5630},
+  year={2021},
+  organization={IEEE},
+  address         = {Xi'an, China}
 }
 
 @INPROCEEDINGS{ncd,
@@ -221,7 +222,8 @@ videourl = {https://youtu.be/7yWtYWaO5Nk}
   volume={},
   number={},
   pages={4353-4360},
-  doi={10.1109/IROS45743.2020.9340849}}
+  doi={10.1109/IROS45743.2020.9340849},
+  address         = {Las Vegas, USA}}
 
   @article{marchingcubes,
   title={Marching cubes: A high resolution 3D surface construction algorithm},
@@ -255,57 +257,65 @@ videourl = {https://youtu.be/7yWtYWaO5Nk}
   author={Oleynikova, Helen and Taylor, Zachary and Fehr, Marius and Siegwart, Roland and  Nieto, Juan},
   booktitle={IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
   title={Voxblox: Incremental 3D Euclidean Signed Distance Fields for On-Board MAV Planning},
-  year={2017}
+  year={2017},
+  address={Vancouver, Canada}
 }
 
 @article{vdbfusion,
-  author         = {Vizzo, Ignacio and Guadagnino, Tiziano and Behley, Jens and Stachniss, Cyrill},
-  title          = {VDBFusion: Flexible and Efficient TSDF Integration of Range Sensor Data},
-  journal        = {Sensors},
-  volume         = {22},
-  year           = {2022},
-  number         = {3},
-  article-number = {1296},
-  url            = {https://www.mdpi.com/1424-8220/22/3/1296},
-  issn           = {1424-8220},
-  doi            = {10.3390/s22031296}
+  title={Vdbfusion: Flexible and efficient tsdf integration of range sensor data},
+  author={Vizzo, Ignacio and Guadagnino, Tiziano and Behley, Jens and Stachniss, Cyrill},
+  journal={Sensors},
+  volume={22},
+  number={3},
+  pages={1296},
+  year={2022},
+  publisher={MDPI}
 }
-
-@inproceedings{LearningDS,
-  title={Learning Deeply Supervised Good Features to Match for Dense Monocular Reconstruction},
-  author={Chamara Saroj Weerasekera and Ravi Garg and Yasir Latif and Ian D. Reid},
-  booktitle={Asian Conference on Computer Vision},
-  year={2017}
+@InProceedings{learningDS,
+author="Weerasekera, Chamara Saroj
+and Garg, Ravi
+and Latif, Yasir
+and Reid, Ian",
+editor="Jawahar, C.V.
+and Li, Hongdong
+and Mori, Greg
+and Schindler, Konrad",
+title="Learning Deeply Supervised Good Features to Match for Dense Monocular Reconstruction",
+booktitle="Computer Vision -- ACCV 2018",
+year="2019",
+publisher="Springer International Publishing",
+address="Cham",
+pages="609--624",
+abstract="Visual SLAM (Simultaneous Localization and Mapping) methods typically rely on handcrafted visual features or raw RGB values for establishing correspondences between images. These features, while suitable for sparse mapping, often lead to ambiguous matches in texture-less regions when performing dense reconstruction due to the aperture problem. In this work, we explore the use of learned features for the matching task in dense monocular reconstruction. We propose a novel convolutional neural network (CNN) architecture along with a deeply supervised feature learning scheme for pixel-wise regression of visual descriptors from an image which are best suited for dense monocular SLAM. In particular, our learning scheme minimizes a multi-view matching cost-volume loss with respect to the regressed features at multiple stages within the network, for explicitly learning contextual features that are suitable for dense matching between images captured by a moving monocular camera along the epipolar line. We integrate the learned features from our model for depth estimation inside a real-time dense monocular SLAM framework, where photometric error is replaced by our learned descriptor error. Our extensive evaluation on several challenging indoor datasets demonstrate greatly improved accuracy in dense reconstructions of the well celebrated dense SLAM systems like DTAM, without compromising their real-time performance.",
+isbn="978-3-030-20873-8"
 }
 
 @ARTICLE{kahler,
-  author =	 {K{\"a}hler, O. and Prisacariu, V.A. and Ren,
-                  C.Y. and Sun, X. and Torr, P. H. S. and Murray,
-                  D. W.},
-  journal =	 {IEEE Transactions on Visualization and Computer
-                  Graphics},
-  title =	 {Very High Frame Rate Volumetric Integration of Depth
-                  Images on Mobile Devices},
-  year =	 2015,
-  volume =	 {PP},
-  number =	 99,
-  pages =	 {1-1},
-  doi =		 {10.1109/TVCG.2015.2459891},
-  ISSN =	 {1077-2626},
-}
+  author={Kähler, Olaf and Adrian Prisacariu, Victor and Yuheng Ren, Carl and Sun, Xin and Torr, Philip and Murray, David},
+  journal={IEEE Transactions on Visualization and Computer Graphics}, 
+  title={Very High Frame Rate Volumetric Integration of Depth Images on Mobile Devices}, 
+  year={2015},
+  volume={21},
+  number={11},
+  pages={1241-1250},
+  doi={10.1109/TVCG.2015.2459891}}
+
 
 @inproceedings{FusionDS,
   title={ElasticFusion: Dense SLAM Without A Pose Graph},
   author={Thomas Whelan and Stefan Leutenegger and Renato F. Salas-Moreno and Ben Glocker and Andrew J. Davison},
   booktitle={Robotics: Science and Systems},
-  year={2015}
+  year={2015},
+  address={Rome, Italy}
 }
 
-@misc{codemapping,
-      title={CodeMapping: Real-Time Dense Mapping for Sparse SLAM using Compact Scene Representations}, 
-      author={Hidenobu Matsuki and Raluca Scona and Jan Czarnowski and Andrew J. Davison},
-      year={2021},
-      eprint={2107.08994},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+@article{codemapping,
+  title={Codemapping: Real-time dense mapping for sparse slam using compact scene representations},
+  author={Matsuki, Hidenobu and Scona, Raluca and Czarnowski, Jan and Davison, Andrew J},
+  journal={IEEE Robotics and Automation Letters},
+  volume={6},
+  number={4},
+  pages={7105--7112},
+  year={2021},
+  publisher={IEEE}
 }
