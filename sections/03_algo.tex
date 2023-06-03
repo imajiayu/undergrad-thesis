@@ -22,7 +22,8 @@
     \caption{一次迭代中的正向传播步骤:首先模拟一条从激光雷达处发出的穿过被采样点云的光线,随后在光线上以固定步长采样(a),对于空间中每一个采样点,对叶子节点体素使用三线性插值计算出特征值(b),最后使用SDF解码器与语义解码器计算出最终结果(c)。}\label{shinemapping}
 \end{figure}
 \subsubsection{解码器}
-如图\ref{shinemapping}所示,本文使用两个较浅的全连接层(MLP)$F_\theta$和$G_\phi$分别用来预测空间中任意一点的SDF值与语义信息。其中$F_\theta$的输出为一个SDF数值,代表该点距离最近表面的距离;$G_\phi$的输出为一个$N_{sem}$维向量,其中$N_{sem}$表示语义标签种类的个数。该向量在推理时会被执行一次argmax函数得到最终语义标签的索引。
+如图\ref{shinemapping}所示,本文使用两个较浅的全连接层(MLP)$F_\theta$和$G_\phi$分别用来预测空间中任意一点的SDF值与语义信息。因为大部分信息以隐式编码
+的方式储存在了地图中,轻量快速的MLP即可胜任解码器的工作。其中$F_\theta$的输出为一个SDF数值,代表该点距离最近表面的距离;$G_\phi$的输出为一个$N_{sem}$维向量,其中$N_{sem}$表示语义标签种类的个数。该向量在推理时会被执行一次argmax函数得到最终语义标签的索引。
 \subsubsection{隐式表面渲染}
 相较于原始NeRF中使用MLP预测空间中任意一点的体密度,也就是占据概率, SDF能更好的表达几何信息,这也是为什么可以将其用于光线追踪中等任务中,因此本文在训练中直接回归SDF值。下列渲染公式表示了如何从嵌套在体素中的特征中获得该处点云最终的深度$D$和语义向量$\mathbf{S}$。假设在一条光线上采样$N$个点:
 \begin{equation}
@@ -34,7 +35,9 @@
     &D &&= \frac{1}{\sum_{j=0}^{N-1}w_j}\sum_{i=0}^{N-1}w_i\cdot d_i
 \end{alignedat}
 \end{equation}
-其中$T_i$表示当前帧激光雷达的位置, $\mathbf{p}_i$表示该点在体素中的相对坐标,$\mbox{TriLerp}(\cdot , \cdot)$表示三线性插值函数, $\mathbf{e}$表示存储在体素中的特征。$F_\theta\mbox{和}G_\phi$分别为带可优化网络参数的解码器。为了计算每一个采样点的权重$w_i$, 本文使用sigmoid函数$\mathbf{\sigma}$计算sdf值$s_i$与先前设置的截断距离$tr$的比值。本文使用该权重对这条光线上的每个采样点的语义向量$\mathbf{S}_i$进行加权积分得到最终结果$\mathbf{S}$。同样的,为了得到深度值,本文对这条光线上每一个采样点的深度进行积分,其中$d_i$为第$i$个采样点的深度。
+其中$T_i$表示当前帧激光雷达的位置, $\mathbf{p}_i$表示该点在体素中的相对坐标,$\mbox{TriLerp}(\cdot , \cdot)$表示三线性插值函数, $\mathbf{e}$表示存储在体素中的特征。$F_\theta\mbox{和}G_\phi$分别为带可优化网络参数的解码器。
+
+为了计算每一个采样点的权重$w_i$, 本文使用sigmoid函数$\mathbf{\sigma}$计算sdf值$s_i$与先前设置的截断距离$tr$的比值\cite{nrgbd}。本文使用该权重对这条光线上的每个采样点的语义向量$\mathbf{S}_i$进行加权积分得到最终结果$\mathbf{S}$。同样的,为了得到深度值,本文对这条光线上每一个采样点的深度进行积分,其中$d_i$为第$i$个采样点的深度。
 \subsection{建图}
 \subsubsection{地图优化}
 为了监督网络训练,本文尝试了多种损失函数,分别为semantic loss, depth loss, free-space loss, SDF loss和二元交叉熵BCE loss。其中semantic loss为多元交叉熵函数, depth loss为L1损失函数。给定采样点云集合$P$:
@@ -48,7 +51,7 @@
 
 在基于SDF的建图中,需要被关注应该是其SDF值为0的点,因为这些点定义了表面。因此,越接近采样点云的采样点应该对最终SDF值的作用更大,反之,离点云越远的点其作用也更小。本文分别使用了SHINE-Mapping中的二元交叉熵损失函数和Vox-Fusion中的free-space loss和sdf loss两个L2损失函数。
 
-SDF二元交叉熵函数的计算过程为,首先通过带超参数$\sigma$的sigmoid函数$S(x) = 1/(1 + e^{x/\sigma})$,其中超参数$\sigma$用来控制函数的平滑度,将sdf值映射到$[0,1]$区间上。给定一个采样点$\mathbf{x}_i\in \mathbb{R}^3$,计算其投影至表面(假设每个被采样的点云均在表面上)的距离$d_i$,使用经过映射后的值$l_i=S(d_i)$作为监督值。之后应用二元交叉熵作为本文的损失函数:
+SDF二元交叉熵函数的计算过程为,首先通过带超参数$\sigma$的sigmoid函数$S(x) = 1/(1 + e^{x/\sigma})$,其中超参数$\sigma$用来控制函数的平滑度,将sdf值映射到$[0,1]$区间上。给定一个采样点$\mathbf{x}_i\in \mathbb{R}^3$,计算其投影至表面(假设每个被采样的点云均在表面上)的距离$d_i$,使用经过映射后的值$l_i=S(d_i)$作为监督值。Sigmoid函数可以自然地增加表面附近采样点的权重,有助于更好地重建几何细节,这一点将在后续实验中进行验证。最后应用二元交叉熵作为本文的损失函数:
 \begin{equation}
     \mathcal{L}_{bce} = l_i\cdot \log(o_i)+(1-l_i)\cdot\log(1-o_i),\label{bce}
 \end{equation}
