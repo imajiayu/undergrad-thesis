@@ -3,7 +3,7 @@ _out
 !figures/tongji.pdf
 
 # LaTeX compile output files
-*.pdf
+# *.pdf
 *.fls
 *.aux
 *.bbl
